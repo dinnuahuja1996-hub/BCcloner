@@ -1,11 +1,16 @@
-cat > settings.gradle.kts << 'EOF'
 pluginManagement {
-    repositories { google(); mavenCentral(); gradlePluginPortal() }
-}
-dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
-    repositories { google(); mavenCentral() }
-}
-rootProject.name = "PlayBBSpooler"
-include(":app")
-EOF
+      repositories {
+          google()
+          mavenCentral()
+          gradlePluginPortal()
+      }
+  }
+  dependencyResolutionManagement {
+      repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+      repositories {
+          google()
+          mavenCentral()
+      }
+  }
+  rootProject.name = "PlayBBSpooler"
+  include(":app")
