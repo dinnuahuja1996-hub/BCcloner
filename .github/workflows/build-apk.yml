@@ -17,28 +17,19 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Install Gradle 8.9
-        run: |
-          wget -q https://services.gradle.org/distributions/gradle-8.9-bin.zip -O /tmp/g.zip
-          unzip -q /tmp/g.zip -d /opt
-
-      - name: Check Android SDK
-        run: |
-          echo "SDK: $ANDROID_SDK_ROOT"
-          ls $ANDROID_SDK_ROOT/platforms/ || echo 'no platforms dir'
-          ls $ANDROID_SDK_ROOT/build-tools/ || echo 'no build-tools dir'
-          echo "Available platforms: $(ls $ANDROID_SDK_ROOT/platforms/ 2>/dev/null)"
-          echo "Available build-tools: $(ls $ANDROID_SDK_ROOT/build-tools/ 2>/dev/null)"
+      - name: Make gradlew executable
+        run: chmod +x gradlew
 
       - name: Build Debug APK
-        run: /opt/gradle-8.9/bin/gradle assembleDebug --no-daemon --stacktrace 2>&1
+        run: ./gradlew assembleDebug --no-daemon --stacktrace
         env:
           ANDROID_HOME: /usr/local/lib/android/sdk
+          ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
 
       - name: Upload APK
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: build-output
+          name: PlayBBTool-APK
           path: app/build/outputs/apk/debug/
           if-no-files-found: warn
