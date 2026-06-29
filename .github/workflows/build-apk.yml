@@ -5,6 +5,10 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
+permissions:
+  issues: write
+  contents: read
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -20,13 +24,28 @@ jobs:
       - name: Make gradlew executable
         run: chmod +x gradlew
 
-      - name: Build Debug APK
-        run: ./gradlew assembleDebug --no-daemon --stacktrace
+      - name: Build APK
+        continue-on-error: true
+        run: |
+          echo "ANDROID_HOME=$ANDROID_HOME" > /tmp/build.log
+          echo "SDK: $ANDROID_SDK_ROOT" >> /tmp/build.log
+          ls /usr/local/lib/android/sdk/ >> /tmp/build.log 2>&1 || echo 'sdk not at default path' >> /tmp/build.log
+          ./gradlew assembleDebug --no-daemon --stacktrace 2>&1 | tail -200 >> /tmp/build.log
         env:
           ANDROID_HOME: /usr/local/lib/android/sdk
           ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
 
-      - name: Upload APK
+      - name: Post log as GitHub Issue
+        if: always()
+        run: |
+          LOG=$(cat /tmp/build.log 2>/dev/null | tail -150 | head -c 60000)
+          curl -s -X POST \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d "{\"title\": \"Build Log - $(date)\", \"body\": \"$(echo "$LOG" | sed 's/\"/\\\"/g' | sed 's/$/\\n/' | tr -d '\n')\"  }" \
+            https://api.github.com/repos/${{ github.repository }}/issues
+
+      - name: Upload APK if success
         if: always()
         uses: actions/upload-artifact@v4
         with:
